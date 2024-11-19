@@ -50,10 +50,9 @@ jobs:
         # The CMake binaries on the Github Actions machines are
         # (as of this writing) 3.12
         run: >
-          cmake ${{ github.workspace }}/tests/hellocpp
-          
-          -DCMAKE_BUILD_TYPE=$BUILD_TYPE
-          -DEXPRESSCPP_USE_CONAN_DEPENDENCIES=ON
+          cmake ${{ github.workspace }}/tests/hellocpp \
+            -DCMAKE_BUILD_TYPE=$BUILD_TYPE \
+            -DEXPRESSCPP_USE_CONAN_DEPENDENCIES=ON
 
       - name: Build
         working-directory: ${{github.workspace}}/build
