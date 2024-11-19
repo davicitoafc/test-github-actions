@@ -1,0 +1,87 @@
+---
+# TODO: Determine the value of a minimum version
+# minimum_pre_commit_version: '1.18.3'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-json
+      #- id: pretty-format-json
+      #  args: ["--autofix"]
+      # - id: flake8
+      #  args: ["--max-line-length=120"]
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-xml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: detect-private-key
+  - repo: https://github.com/PyCQA/flake8
+    rev: 6.1.0
+    hooks:
+      - id: flake8
+  # TODO: is there a newer fork? (4 years old)
+  - repo: https://github.com/lightning-auriga/pre-commit-cpp
+    rev: 1.0.0
+    # - repo: https://gitlab.com/daverona/pre-commit/cpp
+    # rev: 0.8.0
+    hooks:
+      - id: clang-format
+        args: ["-style=Google"]
+      # - id: cppcheck
+      #  args: ["--force", "--inline-suppr", "--language=c++"]
+  # TODO: is there a newer more relevant tool (5 years old)
+  - repo: https://github.com/iconmaster5326/cmake-format-pre-commit-hook
+    rev: v0.6.9
+    hooks:
+      - id: cmake-format
+        # include: "^CMake/.*"
+        # exclude: "^CMake/.*"
+  # This one doesn't seem to install
+  # TODO: replace with something more modern (4 years old)
+  # - repo: https://github.com/pryorda/dockerfilelint-precommit-hooks
+  #  rev: v0.1.0
+  #  hooks:
+  #    - id: dockerfilelint
+  #      exclude: "test.Dockerfile"
+  - repo: https://github.com/openstack-dev/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        exclude: |
+            (?x)(
+                compute_engine_startup_script|
+                scripts/cmake_cmd|
+                ^ci/circleci_tests/shunit2
+            )
+  # TODO: find a newer alternative (4 years old)
+  - repo: https://github.com/detailyang/pre-commit-shell
+    rev: v1.0.6
+    hooks:
+      - id: shell-lint
+        args: ["-x"]
+        exclude: "^ci/circleci_tests/shunit2"
+  - repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.0
+    hooks:
+      - id: gitlint
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.0
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/syntaqx/git-hooks
+    rev: v0.0.18
+    hooks:
+      - id: circleci-config-validate
+#   - repo: https://github.com/codingjoe/relint
+#     rev: 1.2.0
+#     hooks:
+#       - id: relint
+#   - repo: local
+#     hooks:
+#       - id: clang-format
+#         name: clang-format
+#         description: Run `clang-format` against C/C++ header and source files
+#         language: system
+#         entry: ./ci/circleci/build/clang_format_linter.sh
+#         files: \.(h\+\+|h|hh|hxx|hpp|cuh|c|cc|cpp|cu|c\+\+|cxx|tpp|txx)$

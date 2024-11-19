@@ -1,0 +1,145 @@
+---
+name: Tests and Lint
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # save resources
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    runs-on: [self-hosted, ci-lint]
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: 'true'
+
+      # - name: Setup repo
+      #   env:
+      #     GIT_CONFIG_GLOBAL_NEW: ${{ runner.tool_cache }}/.gitconfig_ci_runner
+      #   run: |
+      #     rm -f $GIT_CONFIG_GLOBAL_NEW
+      #     echo GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL_NEW >> $GITHUB_ENV
+
+
+      # Check the workflow files.
+      - name: Download actionlint
+        id: get_actionlint
+        # This is the dumbest rule ever
+        # yamllint disable rule:line-length
+        run: >
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - name: Check workflow files
+        run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
+
+      - name: Install Python packages
+        run: |
+          # python -m pip uninstall -y foobar || true
+          # python -m pip install -r ./.requirements_lock.txt
+          python -m pip install -r ./requirements.txt
+        # Cannot use base requirements_lock.txt as private ssh libraries
+        # cannot be hashed
+
+      # Python linter
+      - name: Run ruff
+        run: |
+          python -m ruff check
+          python -m ruff format --check
+
+      # obnoxious pyright
+      - name: Run Pyright
+        run: |
+          python -m pyright
+
+      # clang stuff
+      - name: Clang-format
+        id: clang-format
+        run: |
+          clang-format --dry-run --Werror --verbose  $(find . -name \*.h -print -o -name \*.cc -print -o -name \*.cpp -print -o -name \*.hpp -print)
+
+      - name: Fail fast?!
+        if: steps.clang-format.outputs.checks-failed > 0
+        run: exit 1
+
+
+      - name: C++ build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
+      - name: Cancel Workflow on Failure
+        if: failure()
+        uses: andymckay/cancel-action@0.5
+
+  build:
+    # runs-on: [self-hosted] # need a cloud ci
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+#         os: [windows-latest, ubuntu-latest]
+        os: [ubuntu-latest]
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: 'true'
+
+      - name: Setup repo
+        env:
+          GIT_CONFIG_GLOBAL_NEW: ${{ runner.tool_cache }}/.gitconfig_ci_runner
+        run: |
+          rm -f $GIT_CONFIG_GLOBAL_NEW
+          echo GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL_NEW >> $GITHUB_ENV
+
+
+      # A common DK thing is to leave XXX in the code
+      - name: Triple-X Checker
+        run: |
+          # Exclude these folders, they're external code.
+          if git grep 'XX''X\b' -- ; then
+            echo "XXX cleanup the list"
+            exit 11
+          fi
+
+      - name: C++ test
+        run: |
+          make test
+
+      - name: Archive logs on failure
+        env:
+          ARCHIVE_DIR: "${{ github.repository}}_${{ runner.name }}"
+          ARCHIVE_NAME: "${{ github.run_number }}_${{ github.run_attempt }}"
+        if: failure()
+        run: |
+          echo "Archiving: $ARCHIVE_DIR"
+          ARCHIVE_DIR=${HOME}/${ARCHIVE_DIR}
+          mkdir -pv $ARCHIVE_DIR
+          echo "Cleanup week old stuff"
+          find $ARCHIVE_DIR -type f -mtime +7 -name '*.xz' -execdir rm -- '{}' \;
+          echo "Archiving logs to ${ARCHIVE_DIR}/${ARCHIVE_NAME}.tar.xz"
+          find ${GITHUB_WORKSPACE}/ -name "*.log" | tar -cJf ${ARCHIVE_DIR}/${ARCHIVE_NAME}.tar.xz -T -
+
+      - name: Cancel Workflow on Failure
+        if: failure()
+        uses: andymckay/cancel-action@0.5
