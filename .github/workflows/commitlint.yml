@@ -1,4 +1,4 @@
-name: lint commit messages
+name: Tests and Lint
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -32,11 +32,34 @@ jobs:
       - name: Install Commitlint
         run: npm install --save-dev @commitlint/{config-conventional,cli}
 
-      - name: Use Custom Commitlint Config
-        # Optional step to debug or verify the commitlint.yaml file is in place
+      - name: Create Commitlint YAML Config
+        run: |
+          cat <<EOT > commitlint.yaml
+          extends:
+            - "@commitlint/config-conventional"
+          rules:
+            type-enum:
+              - 2
+              - always
+              - 
+                - feat
+                - fix
+                - docs
+                - style
+                - refactor
+                - test
+                - chore
+            subject-case:
+              - 2
+              - never
+              - ["sentence-case"]
+          EOT
+
+      - name: Verify Commitlint YAML Config
         run: cat commitlint.yaml
 
       - name: Lint Commit Messages
         run: |
           git fetch --depth=2
           npx commitlint --config commitlint.yaml --from=HEAD~5 --to=HEAD
+
