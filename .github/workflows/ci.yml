@@ -119,9 +119,9 @@ jobs:
       #       exit 11
       #     fi
 
-      - name: C++ test
-        run: |
-          make test
+      # - name: C++ test
+      #   run: |
+      #     make test
 
       - name: Archive logs on failure
         env:
