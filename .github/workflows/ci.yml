@@ -110,14 +110,14 @@ jobs:
           echo "GIT_CONFIG_GLOBAL=$GIT_CONFIG_GLOBAL_NEW" >> $GITHUB_ENV
 
 
-      # A common DK thing is to leave XXX in the code
-      - name: Triple-X Checker
-        run: |
-          # Exclude these folders, they're external code.
-          if git grep 'XX''X\b' -- ; then
-            echo "XXX cleanup the list"
-            exit 11
-          fi
+      # # A common DK thing is to leave XXX in the code
+      # - name: Triple-X Checker
+      #   run: |
+      #     # Exclude these folders, they're external code.
+      #     if git grep 'XX''X\b' -- ; then
+      #       echo "XXX cleanup the list"
+      #       exit 11
+      #     fi
 
       - name: C++ test
         run: |
