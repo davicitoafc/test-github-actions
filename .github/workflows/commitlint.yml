@@ -1,0 +1,42 @@
+name: lint commit messages
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Commitlint
+        run: npm install --save-dev @commitlint/{config-conventional,cli}
+
+      - name: Use Custom Commitlint Config
+        # Optional step to debug or verify the commitlint.yaml file is in place
+        run: cat commitlint.yaml
+
+      - name: Lint Commit Messages
+        run: |
+          git fetch --depth=2
+          npx commitlint --config commitlint.yaml --from=HEAD~5 --to=HEAD

@@ -141,22 +141,4 @@ jobs:
         if: failure()
         uses: andymckay/cancel-action@0.5
 
-  commitlint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Install Commitlint
-        run: npm install --save-dev @commitlint/{config-conventional,cli}
-
-      - name: Lint commit messages
-        run: |
-          git fetch --depth=2
-          npx commitlint --from=HEAD~1 --to=HEAD
 
